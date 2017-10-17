@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -13,6 +13,7 @@ namespace folder_name {
     /// </summary>
     public partial class MainWindow : Window {
         private String parentDirectoryPath;
+        private static readonly UnicodeEncoding FileEncode = new UnicodeEncoding(false, true);
         public MainWindow() {
             InitializeComponent();
         }
@@ -80,7 +81,7 @@ namespace folder_name {
         }
 
         private String getLocalizedResourceNameRawValue(String desktopIniPath) {
-            using (StreamReader sr = new System.IO.StreamReader(desktopIniPath, System.Text.Encoding.GetEncoding("shift-jis"))) {
+            using (StreamReader sr = new System.IO.StreamReader(desktopIniPath, MainWindow.FileEncode)) {
                 Boolean checkedShellClassInfo = false;
                 Regex localizedResourceNameRegex = new Regex(@"^LocalizedResourceName\s*=\s*(.+)");
                 while (sr.Peek() > -1) {
@@ -115,13 +116,13 @@ namespace folder_name {
                 this.saveDesktopIniForNewFile(logicalDirectoryName: saveValue);
             }
         }
-        private void saveDesktopIniForNewFile( String logicalDirectoryName) {
+        private void saveDesktopIniForNewFile(String logicalDirectoryName) {
             String saveString = $@"
 [.ShellClassInfo]
 LocalizedResourceName = {logicalDirectoryName}
 ".TrimStart();
             String iniPath = getDesktopIniPath();
-            using (StreamWriter sw = new System.IO.StreamWriter(iniPath, false, Encoding.GetEncoding("shift_jis"))) {
+            using (StreamWriter sw = new System.IO.StreamWriter(iniPath, false, MainWindow.FileEncode)) {
                 sw.Write(saveString);
             }
             applyFileAttributes();
@@ -134,7 +135,7 @@ LocalizedResourceName = {logicalDirectoryName}
             List<String> saveFileContentLines = new List<string>();
             String iniPath = getDesktopIniPath();
             unsetFileAttributes();
-            using (StreamReader sr = new System.IO.StreamReader(iniPath, System.Text.Encoding.GetEncoding("shift-jis"))) {
+            using (StreamReader sr = new System.IO.StreamReader(iniPath, MainWindow.FileEncode)) {
                 Boolean checkedShellClassInfo = false;
                 Regex localizedResourceNameRegex = new Regex(@"^LocalizedResourceName\s*=\s*(.+)");
                 while (sr.Peek() > -1) {
@@ -149,7 +150,7 @@ LocalizedResourceName = {logicalDirectoryName}
                     }
                 }
             }
-            using (StreamWriter sw = new System.IO.StreamWriter(iniPath, false, Encoding.GetEncoding("shift_jis"))) {
+            using (StreamWriter sw = new System.IO.StreamWriter(iniPath, false, MainWindow.FileEncode)) {
                 sw.Write(String.Join("\r\n", saveFileContentLines));
             }
             applyFileAttributes();
@@ -174,14 +175,14 @@ LocalizedResourceName = {logicalDirectoryName}
             File.SetAttributes(getDesktopIniPath(), attr);
 
             attr = File.GetAttributes(this.parentDirectoryPath);
-            attr |= FileAttributes.System;
+            attr |= FileAttributes.ReadOnly;
             File.SetAttributes(this.parentDirectoryPath, attr);
         }
 
         private void logicalDirectoryNameTextBox_KeyDown(object sender, KeyEventArgs e) {
-            if(e.Key == Key.Enter && this.applyButton.IsEnabled) {
+            if (e.Key == Key.Enter && this.applyButton.IsEnabled) {
                 applyButton_Click(null, null);
-            }else if (e.Key == Key.Escape) {
+            } else if (e.Key == Key.Escape) {
                 Application.Current.Shutdown();
             }
         }
